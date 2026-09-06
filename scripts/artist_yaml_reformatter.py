@@ -1,0 +1,197 @@
+"""
+Batch modify artist.yaml files to make changes to the yaml format
+"""
+
+from pathlib import Path
+
+from mediascan.artistdatafile_loader import load_artistdatafile_yaml
+from mediascan.mediafiles_loader import load_files_yaml
+
+"""
+Converts artist.yaml files from one format to another
+(used to make changes to the format)
+
+artist.yaml file example:
+
+
+Old format:
+
+artist_data:
+  artist_names:
+  - Parcels
+  city: Byron Bay
+  country_code: AU
+  region_code: AU-NSW
+  language_codes:
+  - en
+
+New Format:
+
+artistData:
+  artistNames:
+  - Parcels
+  city: Byron Bay
+  countryCode: AU
+  regionCode: AU-NSW
+  languageCodes:
+  - en
+
+"""
+
+EXCLUDE_DIRS = ["Various Artists"]
+
+
+REFORMAT_ALL = False
+
+
+def excluded(path: Path):
+    for d in EXCLUDE_DIRS:
+        if d in str(path):
+            return True
+    return False
+
+
+def main():
+    files_yaml_path = "../../out/files.yaml"
+    files = load_files_yaml(files_yaml_path)
+    artist_paths: dict[str, Path] = {}
+    for file in files.files:
+        if file.artist not in artist_paths:
+            artist_paths[file.artist] = Path(file.path).parent.parent
+    print(f"loaded {len(artist_paths)} artist paths from mediafiles yaml")
+    artists_missing: list[str] = []
+    artists_updated: list[Path] = []
+    exceptions: list[tuple[Path, Exception]] = []
+    for artist, artist_path in artist_paths.items():
+        if excluded(artist_path):
+            continue
+
+        artist_yaml_path = Path(artist_path).joinpath("artist.yaml")
+        if not artist_yaml_path.exists():
+            print(f"{artist_path} missing artist.yaml")
+            artists_missing.append(artist)
+        else:
+            # convert yaml (if applicable)
+            try:
+                adf = load_artistdatafile_yaml(str(artist_yaml_path))
+                reformat_applicable = REFORMAT_ALL
+
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "Birmingham"
+                    and adf.artist_data.region_code != "GB-WMD"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "GB-WMD"
+
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "Manchester"
+                    and adf.artist_data.region_code != "GB-NWK"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "GB-NWK"
+
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "Liverpool"
+                    and adf.artist_data.region_code != "GB-NWK"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "GB-NWK"
+
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "London"
+                    and adf.artist_data.region_code != "GB-LND"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "GB-LND"
+
+                if adf.artist_data.country_code == "GB" and adf.artist_data.city == "Londres":
+                    reformat_applicable = True
+                    adf.artist_data.city = "London"
+                    adf.artist_data.region_code = "GB-LND"
+
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "Sheffield"
+                    and adf.artist_data.region_code != "GB-SHF"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "GB-SHF"
+
+                if (
+                    adf.artist_data.country_code == "FR"
+                    and adf.artist_data.city == "Paris"
+                    and adf.artist_data.region_code != "FR-IDF"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "FR-IDF"
+
+                if (
+                    adf.artist_data.country_code == "MX"
+                    and adf.artist_data.city == "Mexico City"
+                    and adf.artist_data.region_code != "MX-CMX"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.region_code = "MX-CMX"
+
+                if (
+                    adf.artist_data.country_code == "MX"
+                    and adf.artist_data.region_code == "MX-CMX"
+                    and adf.artist_data.city != "Mexico City"
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.city = "Mexico City"
+
+                # consolidating the boroughs so that the NYC numbers are comparable to LA and London
+                # yes, I'm including the "sixth borough" (Yonkers)
+                # also including Nyack for the same reason (it's part of the NYC metropolitan area)
+                if (
+                    adf.artist_data.country_code == "US"
+                    and adf.artist_data.region_code == "US-NY"
+                    and adf.artist_data.city
+                    in (
+                        "New York",
+                        "New York City, NY",
+                        "Brooklyn",
+                        "The Bronx",
+                        "Long Island",
+                        "Manhattan",
+                        "Queens",
+                        "Staten Island",
+                        "Yonkers",
+                        "Nyack",
+                    )
+                ):
+                    reformat_applicable = True
+                    adf.artist_data.city = "New York City"
+
+                if reformat_applicable:
+                    yaml_str: str = adf.to_yaml(allow_unicode=True)
+                    # print(yaml_str)
+                    with open(artist_yaml_path, "w") as f:
+                        f.write(yaml_str)
+                    print(f"Updated {artist_yaml_path}")
+                    artists_updated.append(artist_yaml_path)
+                    # sys.exit(0)
+            except Exception as ex:
+                artists_missing.append(artist)
+                exceptions.append((artist_yaml_path, ex))
+    exist_count = len(artist_paths) - len(artists_missing)
+
+    print(f"Found artist.yaml for {exist_count} out of {len(artist_paths)} artist folders")
+    print(f"Missing count: {len(artists_missing)}")
+    # print("Writing artists missing artist.yaml list to artists_missing.txt")
+    # with open("artists_missing.txt", "w") as f:
+    #    for artist in sorted(artists_missing):
+    #        f.write(artist + os.linesep)
+    print(f"Total artist.yaml files updated: {len(artists_updated)}")
+    print("Exceptions:")
+    for artist_yaml_path, ex in exceptions:
+        print(artist_yaml_path, ex)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,119 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mediascan"
+version = "1.2.0"
+requires-python = ">=3.10"
+authors = [{ name = "Brett Tolbert", email = "bretttolbert@gmail.com" }]
+maintainers = [{ name = "Brett Tolbert", email = "bretttolbert@gmail.com" }]
+description = "A Python project for working with moongas mediascan database and metadata files."
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+keywords = [
+  "moongas", 
+  "mediascan", 
+  "music",
+  "metadata",
+  "database",
+  "python",
+  "audio",
+  "media",
+  "tagging",
+  "file management",
+  "file organization"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  'Intended Audience :: End Users/Desktop',
+  'Intended Audience :: Education',
+  'Intended Audience :: Science/Research',
+  'Topic :: Utilities',
+  'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+dependencies = [
+  "dataclass-wizard[yaml]>=0.39.1",
+  "pandas>=3.0.5",
+  "pyaml>=25.7.0",
+  "sqlalchemy>=2.0.52",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.1.0",
+  "pytest>=9.1.1",
+]
+stats = [
+  "matplotlib>=3.11.1",
+  "numpy>=2.5.2",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/bretttolbert/moongas-mediascan-py"
+Documentation = "https://github.com/bretttolbert/moongas-mediascan-py"
+Repository = "https://github.com/bretttolbert/moongas-mediascan-py.git"
+"Bug Tracker" = "https://github.com/bretttolbert/moongas-mediascan-py/issues"
+Changelog = "https://github.com/bretttolbert/moongas-mediascan-py/blob/master/CHANGELOG.md"
+
+[tool.setuptools.package-data]
+mediascan = [ 'py.typed']
+
+[tool.setuptools.packages.find]
+where = ["src"]  # <-- This tells setuptools to scan inside src/
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+testpaths = [
+    "tests"
+]
+norecursedirs = [
+    ".git",
+    ".tox",
+    "build",
+    "dist",
+    "venv",
+    "docs",
+    "__pycache__",
+    "scripts",
+    "out"
+]
+addopts = [
+    "--ignore=.git",
+    "--ignore=.tox",
+    "--ignore=build",
+    "--ignore=dist",
+    "--ignore=__pycache__",
+    "--ignore=scripts",
+    "--ignore=out"
+]
+
+[tool.ruff]
+# Set the maximum line length to match your GitHub Actions setup
+line-length = 127
+
+[tool.ruff.lint]
+# Enable Flake8 syntax/error equivalents (E9, F63, F7, F82)
+# "E" and "F" enable pycodestyle errors and Pyflakes
+select = ["E9", "F63", "F7", "F82"]
+
+# Enable McCabe complexity checking (equivalent to flake8 --max-complexity=10)
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.mypy]
+mypy_path = "typings"
+
+[[tool.mypy.overrides]]
+module = "*.pyi"
+ignore_errors = true
