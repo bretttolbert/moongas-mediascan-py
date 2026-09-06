@@ -1,0 +1,150 @@
+from enum import Enum
+import os
+from pathlib import Path
+import shutil
+
+
+class DirCopyMode(Enum):
+    SingleDirectory = 1  #  All images copies to single dstination directory, replacing filenames with 00001.jpg etc.
+    PreserveStructure = 2  #  Preserve directory structure and filenames in dstination
+
+
+def copy_medialib(
+    src_path: Path,
+    dst_path: Path,
+    include_filenames: list[str] = ['artist.yaml', 'cover.jpg'],
+    exclude_keywords: list[str] = [],
+    dry_run: bool = False,
+    ignore_existing: bool = True,
+    dir_copy_mode: DirCopyMode = DirCopyMode.PreserveStructure,
+) -> int:
+    """
+    Recursively copy files (e.g. album cover images) from src medialib directory
+    to specified dstination directory, preserving directory structure (default)
+
+    src_path : path e.g. '/data/Music'
+    dst_path : path e.g. '/data/Covers' (files will be copied to '/data/Covers/Music')
+
+    Dir Copy Modes:
+        1. SingleDirectory
+            All images copies to single dstination directory, replacing filenames with 00001.jpg etc.
+        2. PreserveStructure
+            Preserve directory structure and filenames in dstination
+
+    Returns number it copied (or would have copied if not dry_run)
+    """
+    if not dry_run:
+        Path(dst_path).mkdir(parents=True, exist_ok=True)
+    count = 0
+
+    # first make the directories
+    if dir_copy_mode == DirCopyMode.PreserveStructure:
+        for root, dirs, files in os.walk(src_path, topdown=False):
+            for sd in dirs:
+                src_dir_abs_path = Path(root).joinpath(sd)
+                src_dir_rel_path = src_dir_abs_path.relative_to(src_path)
+                dst_abs_path = Path(dst_path).joinpath(src_dir_rel_path)
+                if not dry_run:
+                    dst_abs_path.mkdir(parents=True, exist_ok=True)
+
+    for root, dirs, files in os.walk(src_path, topdown=False):
+        for src_fname in files:
+            # skip any files not specifically included
+            if src_fname not in include_filenames:
+                continue
+            # skip files with any exclude keywords anywhere in the file path
+            src_file_abs_path = Path(root).joinpath(src_fname)
+            for keyword in exclude_keywords:
+                if str(src_file_abs_path).find(keyword) != -1:
+                    continue
+            _, src_ext = os.path.splitext(src_fname)
+
+            src_file_rel_path = src_file_abs_path.relative_to(src_path)
+            dst_abs_path = Path(dst_path)
+            if dir_copy_mode == DirCopyMode.SingleDirectory:
+                # This mode is for creating flat dir full of images, etc.
+                # so we need to make the filenames unique
+                dst_fname : str = str(count + 1).rjust(5, "0") + src_ext
+                dst_abs_path = dst_abs_path.joinpath(dst_fname)
+            elif dir_copy_mode == DirCopyMode.PreserveStructure:
+                # This mode retains the original filename exactly
+                dst_abs_path = dst_abs_path.joinpath(src_file_rel_path)
+
+            # Don't copy if it exists unless ignore_existing==False
+            if not ignore_existing or not dst_abs_path.exists():
+
+                # Special case:
+                # If copying a .jpg file and .webp file already exists in dstination,
+                # skip the copy unless ignore_existing==False
+                # (I copy jpgs first and then convert them to webp in place,
+                # consequently I want to skip copying jpg that have already been
+                # converted)
+                if src_ext == ".jpg":
+                    dst_fbase, _ = os.path.splitext(dst_abs_path)
+                    dst_abs_path_converted = Path(dst_fbase + ".webp")
+                    if dst_abs_path_converted.exists() and ignore_existing:
+                        continue
+
+                # Copy the file unless it exists and ignore_existing==True
+                if (
+                    not ignore_existing
+                    or not dst_abs_path.exists()
+                ):
+                    if not dry_run:
+                        shutil.copy(src_file_abs_path, dst_abs_path)
+                    count += 1
+    return count
+
+
+def copy_medialibs(
+    src_paths: list[Path], 
+    dst_path: Path,
+    include_filenames: list[str] = ['artist.yaml', 'cover.jpg'],
+    exclude_keywords: list[str] = [],
+    dry_run: bool = False,
+    ignore_existing: bool = True,
+    dir_copy_mode: DirCopyMode = DirCopyMode.PreserveStructure) -> int:
+    """
+    Copies files* from one or more medialib directories from src directory to 
+    medialib directories in dstination directory
+
+    *Which files are copied is determined by the arguments. The idea is to only copy 
+    specified files and ignore everything else.
+
+    src_paths : paths to one or more media library directories to be copied from
+    E.g. '/data/Music' and '/data/OtherMusic'
+    
+    dst_path : path to dstination directory where medialibs will be copied to
+    E.g. given dst_path = '/data/Covers', the following dstination dirs would be created: 
+    `/data/Covers/Music` and `/data/Covers/OtherMusic` 
+    """
+    count: int = 0
+    for src_path in src_paths:
+        count += copy_medialib(
+            src_path=src_path,
+            dst_path=dst_path,
+            include_filenames=include_filenames,
+            dir_copy_mode=dir_copy_mode,
+            exclude_keywords=exclude_keywords,
+            dry_run=dry_run,
+            ignore_existing=ignore_existing,
+        )
+        print(f"Total copied for medialib dir {src_path}: {count}")
+    print(f"Grand total copied for all medialib dirs: {count}")
+    return count
+
+
+def main():
+    """Runs default copy for Brett's music library structure"""
+    copy_medialibs(
+        src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
+        dst_path=Path("/data/Covers"), 
+        include_filenames=["cover.jpg"], 
+        exclude_keywords=[],
+        dry_run=False,
+        ignore_existing=True,
+        dir_copy_mode=DirCopyMode.PreserveStructure)
+
+
+if __name__ == "__main__":
+    main()

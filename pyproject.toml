@@ -54,7 +54,8 @@ dev = [
   "pytest>=9.1.1",
 ]
 stats = [
-  "matplotlib>=3.11.1",
+  "matplotlib>=3.10.9 ; python_version < '3.10'",
+  "matplotlib>=3.11.1 ; python_version > '3.10'",
   "numpy>=2.2.6 ; python_version < '3.12'",
   "numpy>=2.5.2 ; python_version >= '3.12'",
 ]
