@@ -1,4 +1,4 @@
-# moongas-mediascan-py
+# moongas-py-mediascan
 Python library for working with moongas mediascan database files and metadata files
 
 ## Installation 
@@ -11,4 +11,3 @@ pip install -e ".[dev,stats]"
 
 - `[dev]` (pytest and ruff) - used for development and testing
 - `[stats]` (matplotlib and numpy) - used for library statistics script
-

@@ -61,11 +61,11 @@ stats = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/bretttolbert/moongas-mediascan-py"
-Documentation = "https://github.com/bretttolbert/moongas-mediascan-py"
-Repository = "https://github.com/bretttolbert/moongas-mediascan-py.git"
-"Bug Tracker" = "https://github.com/bretttolbert/moongas-mediascan-py/issues"
-Changelog = "https://github.com/bretttolbert/moongas-mediascan-py/blob/master/CHANGELOG.md"
+"Homepage" = "https://github.com/bretttolbert/moongas-py-mediascan"
+Documentation = "https://github.com/bretttolbert/moongas-py-mediascan"
+Repository = "https://github.com/bretttolbert/moongas-py-mediascan.git"
+"Bug Tracker" = "https://github.com/bretttolbert/moongas-py-mediascan/issues"
+Changelog = "https://github.com/bretttolbert/moongas-py-mediascan/blob/master/CHANGELOG.md"
 
 [tool.setuptools.package-data]
 mediascan = [ 'py.typed']
