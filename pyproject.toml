@@ -42,8 +42,9 @@ classifiers = [
 
 dependencies = [
   "dataclass-wizard[yaml]>=0.39.1",
-  "pandas>=3.0.5",
-  "pyaml>=25.7.0",
+  "pandas>=2.2.3 ; python_version < '3.11'",
+  "pandas>=3.0.5 ; python_version >= '3.11'",
+  "pyaml>=26.7.0",
   "sqlalchemy>=2.0.52",
 ]
 
@@ -54,7 +55,8 @@ dev = [
 ]
 stats = [
   "matplotlib>=3.11.1",
-  "numpy>=2.5.2",
+  "numpy>=2.2.6 ; python_version < '3.12'",
+  "numpy>=2.5.2 ; python_version >= '3.12'",
 ]
 
 [project.urls]

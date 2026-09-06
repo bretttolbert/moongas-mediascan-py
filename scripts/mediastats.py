@@ -5,6 +5,7 @@ from typing import Set, Tuple, cast
 
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
+import numpy as np
 import pandas as pd
 
 from mediascan.mediafiles import MediaFiles
@@ -106,7 +107,11 @@ def plt_file_durations(files: MediaFiles):
     xtick_min = min(durations)
     # xtick_max = max(sizes)+1
     xtick_max = 800
-    plt.xticks(np.arange(xtick_min, xtick_max, 10.0))  # type: ignore
+    tick_positions: list[float] = [
+        float(value) for value in np.arange(xtick_min, xtick_max, 10.0)
+    ]
+    axes: Axes = plt.gca()
+    axes.set_xticks(tick_positions)  # type: ignore[reportUnknownMemberType]
 
 
 def plt_year_vs_duration(files: MediaFiles):
