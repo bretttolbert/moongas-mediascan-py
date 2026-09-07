@@ -3,9 +3,12 @@ import os
 from pathlib import Path
 import subprocess
 
+from mediascan.utils.log import log_arguments
+from mediascan.utils.path import get_size_human_readable
+
 """
 Script to batch convert covers from jpg to webp (in place),
-optionally deleting the src jpgs.
+optionally deleting the src jpegs.
 By default it converts at 80% quality and 1000x1000 resolution.
 
 To check the progress, in a separate terminal you can do this:
@@ -42,7 +45,7 @@ $ rsync -ahvP /data/Covers/ root@$DROPLET_IP:/var/www/html/Covers/ --delete
 
 """
 
-
+@log_arguments
 def convert_medialib_cover_images_inplace(
     src_path: Path,
     src_fname: str = "cover.jpg",
@@ -68,11 +71,20 @@ def convert_medialib_cover_images_inplace(
     count = 0
     for root, _, files in os.walk(src_path, topdown=False):
         for fname in files:
+            src_file_abs_path: Path = Path(root).joinpath(fname)
+            dst_file_abs_path: Path = Path(root).joinpath(dst_fname)
+            skip = False
             for keyword in exclude_keywords:
-                if root.find(keyword) != -1:
-                    continue
+                if str(src_file_abs_path).find(keyword) != -1:
+                    print(f"Skipping file '{src_file_abs_path}' based on exclude keyword '{keyword}'")
+                    skip = True
+            if skip:
+                continue
             if fname == src_fname:
-                if overwrite or not Path(root).joinpath(dst_fname).exists():
+                if dst_file_abs_path.exists() and not overwrite:
+                    print(f"Skipping file '{src_file_abs_path}' because destination file '{dst_file_abs_path}' exists "
+                        "and `--overwrite` was not specified")
+                else:
                     if not dry_run:
                         cmd = [
                             "convert",
@@ -83,27 +95,28 @@ def convert_medialib_cover_images_inplace(
                             str(quality),
                             dst_fname,
                         ]
-                        print(f"root={root} cmd={cmd}")
+                        print(f"Convert cmd={cmd} cwd={root}")
                         subprocess.run(cmd, cwd=root, check=True)
                         if delete_src_file:
-                            os.remove(src_fname)
+                            os.remove(src_file_abs_path)
+                            print(f"Removed source file '{src_file_abs_path}'")
                     count += 1
     return count
 
 
+@log_arguments
 def convert_medialibs_cover_images_inplace(
     src_paths: list[Path],
     src_filename: str = "cover.jpg",
     dst_filename: str = "cover.webp",
-    exclude_keywords: list[str] | None = None,
+    exclude_keywords: list[str] = [],
     resolution: str = "1000x1000",
     quality: int = 80,
     dry_run: bool = False,
     delete_src_file: bool = True,
     overwrite: bool = False,
 ) -> int:
-    if exclude_keywords is None:
-        exclude_keywords = [""]
+    print("Converting cover images (in-place)")
 
     grand_total: int = 0
     for src_path in src_paths:
@@ -131,13 +144,22 @@ def make_archive(src_path: Path, dst_path: Path) -> None:
     src_path: path to the source directory to compress
     dst_path: path to the .tgz file to output
     """
+    src_path = src_path.resolve()
+    dst_path = dst_path.resolve()
+
     if dst_path.exists():
         print(f"Removing existing archive {dst_path}")
         os.remove(dst_path)
+
+    print(f"Creating archive '{dst_path}' from '{src_path.name}'...")
+    
+    # Run tar inside the parent directory of src_path
     subprocess.run(
-        ["tar", "czvf", str(dst_path), str(src_path)],
+        ["tar", "czf", str(dst_path), src_path.name],
+        cwd=src_path.parent,
         check=True,
     )
+    print(f"Created archive: {dst_path} (size: {get_size_human_readable(dst_path)})")
 
 
 def parse_args() -> argparse.Namespace:
@@ -166,7 +188,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-e", "--exclude-keywords",
         nargs="*",
-        default=[""],
+        default=[],
         help="Keywords to exclude matching paths."
     )
     parser.add_argument(

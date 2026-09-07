@@ -4,12 +4,15 @@ import argparse
 import os
 import shutil
 
+from mediascan.utils.log import log_arguments
+
 
 class DirCopyMode(Enum):
-    SingleDirectory = 1  #  All images copies to single dstination directory, replacing filenames with 00001.jpg etc.
-    PreserveStructure = 2  #  Preserve directory structure and filenames in dstination
+    SingleDirectory = 1  #  All images copies to single destination directory, replacing filenames with 00001.jpg etc.
+    PreserveStructure = 2  #  Preserve directory structure and filenames in destination
 
 
+@log_arguments
 def copy_medialib(
     src_path: Path,
     dst_path: Path,
@@ -21,16 +24,16 @@ def copy_medialib(
 ) -> int:
     """
     Recursively copy files (e.g. album cover images) from src medialib directory
-    to specified dstination directory, preserving directory structure (default)
+    to specified destination directory, preserving directory structure (default)
 
     src_path : path e.g. '/data/Music'
-    dst_path : path e.g. '/data/Covers' (files will be copied to '/data/Covers/Music')
+    dst_path : path e.g. '/data/Covers/Music'
 
     Dir Copy Modes:
         1. SingleDirectory
-            All images copies to single dstination directory, replacing filenames with 00001.jpg etc.
+            All images copies to single destination directory, replacing filenames with 00001.jpg etc.
         2. PreserveStructure
-            Preserve directory structure and filenames in dstination
+            Preserve directory structure and filenames in destination
 
     Returns number it copied (or would have copied if not dry_run)
     """
@@ -55,9 +58,13 @@ def copy_medialib(
                 continue
             # skip files with any exclude keywords anywhere in the file path
             src_file_abs_path = Path(root).joinpath(src_fname)
+            skip = False
             for keyword in exclude_keywords:
                 if str(src_file_abs_path).find(keyword) != -1:
-                    continue
+                    print(f"Skipping file '{src_file_abs_path}' based on exclude keyword '{keyword}'")
+                    skip = True
+            if skip:
+                continue
             _, src_ext = os.path.splitext(src_fname)
 
             src_file_rel_path = src_file_abs_path.relative_to(src_path)
@@ -75,10 +82,10 @@ def copy_medialib(
             if not ignore_existing or not dst_abs_path.exists():
 
                 # Special case:
-                # If copying a .jpg file and .webp file already exists in dstination,
+                # If copying a .jpg file and .webp file already exists in destination,
                 # skip the copy unless ignore_existing==False
-                # (I copy jpgs first and then convert them to webp in place,
-                # consequently I want to skip copying jpg that have already been
+                # (I copy jpegs first and then convert them to webp in place,
+                # consequently I want to skip copying jpegs that have already been
                 # converted)
                 if src_ext == ".jpg":
                     dst_fbase, _ = os.path.splitext(dst_abs_path)
@@ -97,9 +104,10 @@ def copy_medialib(
     return count
 
 
+@log_arguments
 def copy_medialibs(
     src_paths: list[Path], 
-    dst_path: Path,
+    dst_root_path: Path,
     include_filenames: list[str] = ['artist.yaml', 'cover.jpg'],
     exclude_keywords: list[str] = [],
     dry_run: bool = False,
@@ -107,23 +115,30 @@ def copy_medialibs(
     dir_copy_mode: DirCopyMode = DirCopyMode.PreserveStructure) -> int:
     """
     Copies files* from one or more medialib directories from src directory to 
-    medialib directories in dstination directory
+    medialib directories inside the specified root destination directory
 
     *Which files are copied is determined by the arguments. The idea is to only copy 
     specified files and ignore everything else.
 
     src_paths : paths to one or more media library directories to be copied from
-    E.g. '/data/Music' and '/data/OtherMusic'
+    E.g. /data/Music and /data/OtherMusic
     
-    dst_path : path to dstination directory where medialibs will be copied to
-    E.g. given dst_path = '/data/Covers', the following dstination dirs would be created: 
-    `/data/Covers/Music` and `/data/Covers/OtherMusic` 
+    dst_root_path : path to root destination directory medialibs will be copied into
+    E.g. /data/Covers
+
+    Complete example:
+    Given the following arguments:
+        - src_paths = ['/data/Music', '/data/OtherMusic']
+        - dst_root_path = '/data/Covers'
+    Then the following destination subdirectories would be created inside /data/Covers:
+        - /data/Covers/Music
+        - /data/Covers/OtherMusic
     """
     count: int = 0
     for src_path in src_paths:
         count += copy_medialib(
             src_path=src_path,
-            dst_path=dst_path,
+            dst_path=dst_root_path.joinpath(src_path.name),
             include_filenames=include_filenames,
             dir_copy_mode=dir_copy_mode,
             exclude_keywords=exclude_keywords,
@@ -138,7 +153,7 @@ def copy_medialibs(
 def copy_covers():
     copy_medialibs(
         src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
-        dst_path=Path("/data/Covers"), 
+        dst_root_path=Path("/data/Covers"), 
         include_filenames=["cover.jpg"], 
         exclude_keywords=[],
         dry_run=False,
@@ -148,7 +163,7 @@ def copy_covers():
 def copy_artist_yaml():
     copy_medialibs(
         src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
-        dst_path=Path("/home/brett/Git/bretttolbert/moongas/moongas-library"), 
+        dst_root_path=Path("/home/brett/Git/bretttolbert/moongas/moongas-library"), 
         include_filenames=["cover.jpg"], 
         exclude_keywords=[],
         dry_run=False,
@@ -215,7 +230,7 @@ def main():
 
     copy_medialibs(
         src_paths=args.src_paths,
-        dst_path=args.dst_path,
+        dst_root_path=args.dst_path,
         include_filenames=args.include_filenames,
         exclude_keywords=args.exclude_keywords,
         dry_run=args.dry_run,
