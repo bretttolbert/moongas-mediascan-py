@@ -1,6 +1,7 @@
+import argparse
 import os
-import subprocess
 from pathlib import Path
+import subprocess
 
 """
 Script to batch convert covers from jpg to webp (in place),
@@ -90,26 +91,42 @@ def convert_medialib_cover_images_inplace(
     return count
 
 
-def convert_medialibs_cover_images_inplace(src_paths: list[Path]) -> int:
-    count: int = 0
+def convert_medialibs_cover_images_inplace(
+    src_paths: list[Path],
+    src_filename: str = "cover.jpg",
+    dst_filename: str = "cover.webp",
+    exclude_keywords: list[str] | None = None,
+    resolution: str = "1000x1000",
+    quality: int = 80,
+    dry_run: bool = False,
+    delete_src_file: bool = True,
+    overwrite: bool = False,
+) -> int:
+    if exclude_keywords is None:
+        exclude_keywords = [""]
+
+    grand_total: int = 0
     for src_path in src_paths:
+        # Assuming convert_medialib_cover_images_inplace is defined elsewhere in your module
         count = convert_medialib_cover_images_inplace(
             src_path,
-            "cover.jpg",
-            "cover.webp",
-            exclude_keywords=[""],
-            resolution="1000x1000",
-            quality=80,
-            dry_run=False,
-            delete_src_file=True,
-            overwrite=False,
+            src_filename,
+            dst_filename,
+            exclude_keywords=exclude_keywords,
+            resolution=resolution,
+            quality=quality,
+            dry_run=dry_run,
+            delete_src_file=delete_src_file,
+            overwrite=overwrite,
         )
         print(f"Total converted for medialib dir {src_path}: {count}")
-    print(f"Grand total copied for all medialib dirs: {count}")
-    return count
+        grand_total += count
+
+    print(f"Grand total converted for all medialib dirs: {grand_total}")
+    return grand_total
 
 
-def make_archive(src_path: Path, dst_path: Path):
+def make_archive(src_path: Path, dst_path: Path) -> None:
     """
     src_path: path to the source directory to compress
     dst_path: path to the .tgz file to output
@@ -123,9 +140,104 @@ def make_archive(src_path: Path, dst_path: Path):
     )
 
 
-def main():
-    convert_medialibs_cover_images_inplace([Path("/data/Covers/Music"), Path("/data/Covers/MusicOther")])
-    make_archive(Path("/data/Covers/"), Path(f"/data/Covers.tar.gz"))
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Convert medialib cover images in-place and create a tar archive."
+    )
+
+    # Conversion arguments
+    parser.add_argument(
+        "-s", "--src-paths",
+        type=Path,
+        nargs="+",
+        default=[Path("/data/Covers/Music"), Path("/data/Covers/MusicOther")],
+        help="Source directory paths for image conversion."
+    )
+    parser.add_argument(
+        "--src-filename",
+        default="cover.jpg",
+        help="Target source filename to look for (default: cover.jpg)."
+    )
+    parser.add_argument(
+        "--dst-filename",
+        default="cover.webp",
+        help="Target output filename format (default: cover.webp)."
+    )
+    parser.add_argument(
+        "-e", "--exclude-keywords",
+        nargs="*",
+        default=[""],
+        help="Keywords to exclude matching paths."
+    )
+    parser.add_argument(
+        "--resolution",
+        default="1000x1000",
+        help="Target image resolution WxH (default: 1000x1000)."
+    )
+    parser.add_argument(
+        "--quality",
+        type=int,
+        default=80,
+        help="Image quality setting 1-100 (default: 80)."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Perform a dry run without modifying files."
+    )
+    parser.add_argument(
+        "--keep-src-file",
+        dest="delete_src_file",
+        action="store_false",
+        default=True,
+        help="Do not delete source files after conversion (default: delete original)."
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        default=False,
+        help="Overwrite target file if it already exists."
+    )
+
+    # Archive arguments
+    parser.add_argument(
+        "--archive-src",
+        type=Path,
+        default=Path("/data/Covers/"),
+        help="Source path to archive (default: /data/Covers/)."
+    )
+    parser.add_argument(
+        "--archive-dst",
+        type=Path,
+        default=Path("/data/Covers.tar.gz"),
+        help="Destination tarball file path (default: /data/Covers.tar.gz)."
+    )
+    parser.add_argument(
+        "--skip-archive",
+        action="store_true",
+        help="Skip creation of the tar archive after conversion."
+    )
+
+    return parser.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+
+    convert_medialibs_cover_images_inplace(
+        src_paths=args.src_paths,
+        src_filename=args.src_filename,
+        dst_filename=args.dst_filename,
+        exclude_keywords=args.exclude_keywords,
+        resolution=args.resolution,
+        quality=args.quality,
+        dry_run=args.dry_run,
+        delete_src_file=args.delete_src_file,
+        overwrite=args.overwrite,
+    )
+
+    if not args.skip_archive:
+        make_archive(src_path=args.archive_src, dst_path=args.archive_dst)
 
 
 if __name__ == "__main__":

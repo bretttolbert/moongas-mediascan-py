@@ -1,6 +1,7 @@
 from enum import Enum
-import os
 from pathlib import Path
+import argparse
+import os
 import shutil
 
 
@@ -134,8 +135,7 @@ def copy_medialibs(
     return count
 
 
-def main():
-    """Runs default copy for Brett's music library structure"""
+def copy_covers():
     copy_medialibs(
         src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
         dst_path=Path("/data/Covers"), 
@@ -144,6 +144,84 @@ def main():
         dry_run=False,
         ignore_existing=True,
         dir_copy_mode=DirCopyMode.PreserveStructure)
+
+def copy_artist_yaml():
+    copy_medialibs(
+        src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
+        dst_path=Path("/home/brett/Git/bretttolbert/moongas/moongas-library"), 
+        include_filenames=["cover.jpg"], 
+        exclude_keywords=[],
+        dry_run=False,
+        ignore_existing=True,
+        dir_copy_mode=DirCopyMode.PreserveStructure)
+
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Copy media library files maintaining structure or target criteria."
+    )
+    
+    parser.add_argument(
+        "-s", "--src-paths",
+        type=Path,
+        nargs="+",
+        default=[Path("/data/Music"), Path("/data/MusicOther")],
+        help="One or more source directory paths."
+    )
+    parser.add_argument(
+        "-d", "--dst-path",
+        type=Path,
+        required=True,
+        help="Destination directory path."
+    )
+    parser.add_argument(
+        "-i", "--include-filenames",
+        nargs="+",
+        default=["cover.jpg"],
+        help="Filename patterns to include (e.g., cover.jpg artist.yaml)."
+    )
+    parser.add_argument(
+        "-e", "--exclude-keywords",
+        nargs="*",
+        default=[],
+        help="Keywords to exclude from file paths."
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Perform a trial run without making actual file changes."
+    )
+    parser.add_argument(
+        "--overwrite-existing",
+        dest="ignore_existing",
+        action="store_false",
+        default=True,
+        help="Overwrite existing destination files (default: skip existing)."
+    )
+    parser.add_argument(
+        "--dir-copy-mode",
+        type=lambda mode: DirCopyMode[mode],
+        choices=list(DirCopyMode),
+        default=DirCopyMode.PreserveStructure,
+        help="Directory structure copy mode."
+    )
+    
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    copy_medialibs(
+        src_paths=args.src_paths,
+        dst_path=args.dst_path,
+        include_filenames=args.include_filenames,
+        exclude_keywords=args.exclude_keywords,
+        dry_run=args.dry_run,
+        ignore_existing=args.ignore_existing,
+        dir_copy_mode=args.dir_copy_mode
+    )
 
 
 if __name__ == "__main__":

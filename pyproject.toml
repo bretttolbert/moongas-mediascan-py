@@ -48,6 +48,10 @@ dependencies = [
   "sqlalchemy>=2.0.52",
 ]
 
+[project.scripts]
+copy-medialib = "scripts.copy_medialib:main"
+convert-covers = "scripts.convert_covers:main"
+
 [project.optional-dependencies]
 dev = [
   "ruff>=0.1.0",
@@ -71,7 +75,8 @@ Changelog = "https://github.com/bretttolbert/moongas-py-mediascan/blob/master/CH
 mediascan = [ 'py.typed']
 
 [tool.setuptools.packages.find]
-where = ["src"]  # <-- This tells setuptools to scan inside src/
+where = ["src", "."]
+include = ["mediascan*", "scripts"]
 
 [tool.pytest.ini_options]
 pythonpath = [
