@@ -14,7 +14,9 @@
         "**/.env*": true,
         "**/.venv*": true,
         "**/.git": true,
-        "**/node_modules": true
+        "**/node_modules": true,
+        "**/build": true,
+        "**/.pytest_cache": true
     },
     "files.watcherExclude": {
         "**/.git/objects/**": true,
