@@ -83,27 +83,30 @@ pythonpath = [
   "."
 ]
 testpaths = [
-    "tests"
+  "tests"
 ]
 norecursedirs = [
-    ".git",
-    ".tox",
-    "build",
-    "dist",
-    "venv",
-    "docs",
-    "__pycache__",
-    "scripts",
-    "out"
+  ".env*",
+  ".venv*",
+  ".git",
+  ".tox",
+  "build",
+  "dist",
+  "env*",
+  "venv*",
+  "docs",
+  "__pycache__",
+  "scripts",
+  "out"
 ]
 addopts = [
-    "--ignore=.git",
-    "--ignore=.tox",
-    "--ignore=build",
-    "--ignore=dist",
-    "--ignore=__pycache__",
-    "--ignore=scripts",
-    "--ignore=out"
+  "--ignore=.git",
+  "--ignore=.tox",
+  "--ignore=build",
+  "--ignore=dist",
+  "--ignore=__pycache__",
+  "--ignore=scripts",
+  "--ignore=out"
 ]
 
 [tool.ruff]
