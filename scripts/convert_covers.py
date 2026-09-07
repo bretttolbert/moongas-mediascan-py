@@ -246,7 +246,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    convert_medialibs_cover_images_inplace(
+    count_converted: int = convert_medialibs_cover_images_inplace(
         src_paths=args.src_paths,
         src_filename=args.src_filename,
         dst_filename=args.dst_filename,
@@ -258,7 +258,11 @@ def main() -> None:
         overwrite=args.overwrite,
     )
 
-    if not args.skip_archive:
+    if count_converted == 0:
+        print("Skipping archive creation because no files were converted") 
+    elif args.skip_archive:
+        print("Skipping archive creation because --skip-archive was specified") 
+    else:
         make_archive(src_path=args.archive_src, dst_path=args.archive_dst)
 
 
