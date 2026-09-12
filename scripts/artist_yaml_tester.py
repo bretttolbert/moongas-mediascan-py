@@ -5,16 +5,16 @@ from mediascan.artistdatafile_loader import load_artistdatafile_yaml
 from mediascan.mediafiles_loader import load_files_yaml
 
 """
-Tests whether media library artist dirs have valid artists.yaml file
+Tests whether media library artist dirs have valid artists.yml file
 (TODO: Integrate this into mediatest)
 
-Note: Some of these tests should be moved to mediatest,
-once it has been refactored to test mediascan database instead of mediascan files yaml.
+Note: Some of these tests should be moved to mediatest, once it has been refactored 
+to test mediascan database instead of mediascan files.yml file
 
-The scope of this script should be reduced to only test that the artist.yaml files are
+The scope of this script should be reduced to only test that the artist.yml files are
 present and syntactically valid.
 
-artist.yaml file example:
+artist.yml file example:
 
 artist_data:
   artist_names:
@@ -41,7 +41,7 @@ def excluded(path: Path) -> bool:
 
 def main():
 
-    files_yaml_path = "../../out/files.yaml"
+    files_yaml_path = "../../out/files.yml"
 
     # TODO: Read source paths from config
     artist_yaml_paths: list[str] = []
@@ -49,11 +49,11 @@ def main():
     for source_path in SOURCE_PATHS:
         for root, _, files in os.walk(source_path):
             for f in files:
-                if f == "artist.yaml":
+                if f == "artist.yml":
                     full_path = os.path.join(root, f)
                     absolute_path = os.path.abspath(full_path)
                     artist_yaml_paths.append(str(absolute_path))
-                    print(f"found artist.yaml: absolute_path={absolute_path}")
+                    print(f"found artist.yml: absolute_path={absolute_path}")
     artist_yaml_paths = list(set(artist_yaml_paths))
 
     files = load_files_yaml(files_yaml_path)
@@ -68,9 +68,9 @@ def main():
         if excluded(artist_path):
             continue
 
-        artist_yaml_path = Path(artist_path).joinpath("artist.yaml")
+        artist_yaml_path = Path(artist_path).joinpath("artist.yml")
         if not artist_yaml_path.exists():
-            print(f"{artist_path} missing artist.yaml")
+            print(f"{artist_path} missing artist.yml")
             artists_missing.append(artist)
         else:
             try:
@@ -115,19 +115,32 @@ def main():
                         "invalid countryCode 'UK' (United Kingdom country code should be 'GB', per ISO standard)"
                     )
                 if adf.artist_data.country_code.upper() == "EL":
-                    raise Exception("invalid countryCode 'EL' (Greece country code should be 'GR', per ISO standard)")
-                if len(adf.artist_data.region_code) and "-" not in adf.artist_data.region_code:
+                    raise Exception(
+                        "invalid countryCode 'EL' (Greece country code should be 'GR', per ISO standard)"
+                    )
+                if (
+                    len(adf.artist_data.region_code)
+                    and "-" not in adf.artist_data.region_code
+                ):
                     # require format 'GB-NIR' rather than just 'NIR'
-                    raise Exception(f"invalid regionCode '{adf.artist_data.region_code}' (missing hyphen)")
+                    raise Exception(
+                        f"invalid regionCode '{adf.artist_data.region_code}' (missing hyphen)"
+                    )
                 # require country and region codes to be uppercase
                 if adf.artist_data.country_code != adf.artist_data.country_code.upper():
-                    raise Exception("invalid countryCode (lowercase letters are not allowed")
+                    raise Exception(
+                        "invalid countryCode (lowercase letters are not allowed"
+                    )
                 if adf.artist_data.region_code != adf.artist_data.region_code.upper():
-                    raise Exception("invalid regionCode (lowercase letters are not allowed")
+                    raise Exception(
+                        "invalid regionCode (lowercase letters are not allowed"
+                    )
                 # require language codes to be lowercase
                 for l in adf.artist_data.language_codes:
                     if l != l.lower():
-                        raise Exception("invalid languageCode (uppercase letters are not allowed")
+                        raise Exception(
+                            "invalid languageCode (uppercase letters are not allowed"
+                        )
                 # require countryCode to be non-empty
                 if adf.artist_data.country_code == "":
                     raise Exception("invalid countryCode (must not be empty)")
@@ -143,7 +156,9 @@ def main():
                     and adf.artist_data.country_code == "GB"
                     and adf.artist_data.region_code != "GB-WMD"
                 ):
-                    raise Exception("The correct region code for Birmingham, UK is GB-WMD (West Midlands)")
+                    raise Exception(
+                        "The correct region code for Birmingham, UK is GB-WMD (West Midlands)"
+                    )
 
                 # No: Manchester (Manchester, United Kingdom)
                 # No: Manchester (England, United Kingdom)
@@ -153,21 +168,27 @@ def main():
                     and adf.artist_data.country_code == "GB"
                     and adf.artist_data.region_code != "GB-NWK"
                 ):
-                    raise Exception("The correct region code for Manchester, UK is GB-NWK (North West England)")
+                    raise Exception(
+                        "The correct region code for Manchester, UK is GB-NWK (North West England)"
+                    )
 
                 # Don't allow region code to be so specific that it simply duplicates the city
                 # Region code should be state, province, or equivalent
                 if adf.artist_data.region_code == "GB-HER":
-                    raise Exception("The correct region code for Herefordshire, UK is GB-WMD (West Midlands)")
+                    raise Exception(
+                        "The correct region code for Herefordshire, UK is GB-WMD (West Midlands)"
+                    )
 
             except Exception as ex:
                 artists_missing.append(artist)
                 exceptions.append((artist_yaml_path, ex))
     exist_count = len(artist_paths) - len(artists_missing)
-    print(f"Found artist.yaml for {exist_count} out of {len(artist_paths)} artist folders")
+    print(
+        f"Found artist.yml for {exist_count} out of {len(artist_paths)} artist folders"
+    )
     print(f"Missing/Invalid count: {len(artists_missing)}")
     if len(artists_missing) > 0:
-        print("Writing artists missing artist.yaml list to artists_missing.txt")
+        print("Writing artists missing artist.yml list to artists_missing.txt")
         with open("artists_missing.txt", "w") as f:
             for artist in sorted(artists_missing):
                 f.write(artist + os.linesep)
@@ -177,11 +198,13 @@ def main():
             print(artist_yaml_path, ex)
 
     # artist_yaml_paths should now be empty
-    # if it's not empty, that means there is an artist.yaml file on the filesystem that is not
+    # if it's not empty, that means there is an artist.yml file on the filesystem that is not
     # in the artist path of any artist, so it's probably in the wrong directory
     if len(artist_yaml_paths) > 0:
         print("Warnings:")
-        print("Validation skipped for the following artist.yaml files which are not in any artist path:")
+        print(
+            "Validation skipped for the following artist.yml files which are not in any artist path:"
+        )
         for p in artist_yaml_paths:
             print(p)
 

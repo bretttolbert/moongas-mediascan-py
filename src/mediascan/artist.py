@@ -8,7 +8,7 @@ from .artistdata import ArtistData
 class Artist(YAMLWizard):
     """
     Artist dataclass
-    an artist, including directory path and the data read from the artist.yaml file in said directory
+    an artist, including directory path and the data read from the artist.yml file in said directory
     """
 
     artist_data: ArtistData

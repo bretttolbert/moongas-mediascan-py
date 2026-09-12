@@ -8,7 +8,7 @@ from .mediafile import MediaFile
 class MediaFiles(YAMLWizard):
     """
     MediaFiles dataclass
-    Data model for files.yaml file output by mediascan cmd/scanfiles
+    Data model for files.yml file output by mediascan cmd/scanfiles
 
     """
 

@@ -3,11 +3,21 @@ Python library for working with moongas mediascan database files and metadata fi
 
 ## Installation 
 
+### (User) Install from GitHub repo
+
 ```bash
-pip install -e ".[dev,stats]"
+pip install "git+https://github.com/bretttolbert/moongas-py-mediascan.git[stats]"
 ```
 
-## Optional dependency groups
+### (Developer) Clone GitHub repo and install (editable)
 
-- `[dev]` (pytest and ruff) - used for development and testing
-- `[stats]` (matplotlib and numpy) - used for library statistics script
+```bash
+git clone git@github.com:bretttolbert/moongas-py-mediascan.git && cd mediascan
+python -m pip install -e ".[dev,stats]"
+```
+
+### Optional dependency groups
+
+- `[dev]` - development dependencies (includes `pytest` and `ruff`)
+- `[stats]` - statistics script dependencies (includes `matplotlib` and `numpy`)
+

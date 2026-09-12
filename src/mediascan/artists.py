@@ -8,7 +8,7 @@ from .artist import Artist
 class Artists(YAMLWizard):
     """
     Artists dataclass
-    Data model for artists.yaml file output by mediascan cmd/scanartists
+    Data model for artists.yml file (multiple artist.yml are scanned into one consolidated artists.yml) output by mediascan cmd/scanartists
 
     """
 

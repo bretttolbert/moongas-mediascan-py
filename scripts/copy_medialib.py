@@ -16,7 +16,7 @@ class DirCopyMode(Enum):
 def copy_medialib(
     src_path: Path,
     dst_path: Path,
-    include_filenames: list[str] = ['artist.yaml', 'cover.jpg'],
+    include_filenames: list[str] = ["artist.yml", "cover.jpg"],
     exclude_keywords: list[str] = [],
     dry_run: bool = False,
     ignore_existing: bool = True,
@@ -61,7 +61,9 @@ def copy_medialib(
             skip = False
             for keyword in exclude_keywords:
                 if str(src_file_abs_path).find(keyword) != -1:
-                    print(f"Skipping file '{src_file_abs_path}' based on exclude keyword '{keyword}'")
+                    print(
+                        f"Skipping file '{src_file_abs_path}' based on exclude keyword '{keyword}'"
+                    )
                     skip = True
             if skip:
                 continue
@@ -72,7 +74,7 @@ def copy_medialib(
             if dir_copy_mode == DirCopyMode.SingleDirectory:
                 # This mode is for creating flat dir full of images, etc.
                 # so we need to make the filenames unique
-                dst_fname : str = str(count + 1).rjust(5, "0") + src_ext
+                dst_fname: str = str(count + 1).rjust(5, "0") + src_ext
                 dst_abs_path = dst_abs_path.joinpath(dst_fname)
             elif dir_copy_mode == DirCopyMode.PreserveStructure:
                 # This mode retains the original filename exactly
@@ -94,10 +96,7 @@ def copy_medialib(
                         continue
 
                 # Copy the file unless it exists and ignore_existing==True
-                if (
-                    not ignore_existing
-                    or not dst_abs_path.exists()
-                ):
+                if not ignore_existing or not dst_abs_path.exists():
                     if not dry_run:
                         shutil.copy(src_file_abs_path, dst_abs_path)
                     count += 1
@@ -106,23 +105,24 @@ def copy_medialib(
 
 @log_arguments
 def copy_medialibs(
-    src_paths: list[Path], 
+    src_paths: list[Path],
     dst_root_path: Path,
-    include_filenames: list[str] = ['artist.yaml', 'cover.jpg'],
+    include_filenames: list[str] = ["artist.yml", "cover.jpg"],
     exclude_keywords: list[str] = [],
     dry_run: bool = False,
     ignore_existing: bool = True,
-    dir_copy_mode: DirCopyMode = DirCopyMode.PreserveStructure) -> int:
+    dir_copy_mode: DirCopyMode = DirCopyMode.PreserveStructure,
+) -> int:
     """
-    Copies files* from one or more medialib directories from src directory to 
+    Copies files* from one or more medialib directories from src directory to
     medialib directories inside the specified root destination directory
 
-    *Which files are copied is determined by the arguments. The idea is to only copy 
+    *Which files are copied is determined by the arguments. The idea is to only copy
     specified files and ignore everything else.
 
     src_paths : paths to one or more media library directories to be copied from
     E.g. /data/Music and /data/OtherMusic
-    
+
     dst_root_path : path to root destination directory medialibs will be copied into
     E.g. /data/Covers
 
@@ -152,76 +152,78 @@ def copy_medialibs(
 
 def copy_covers():
     copy_medialibs(
-        src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
-        dst_root_path=Path("/data/Covers"), 
-        include_filenames=["cover.jpg"], 
+        src_paths=[Path("/data/Music"), Path("/data/MusicOther")],
+        dst_root_path=Path("/data/Covers"),
+        include_filenames=["cover.jpg"],
         exclude_keywords=[],
         dry_run=False,
         ignore_existing=True,
-        dir_copy_mode=DirCopyMode.PreserveStructure)
+        dir_copy_mode=DirCopyMode.PreserveStructure,
+    )
+
 
 def copy_artist_yaml():
     copy_medialibs(
-        src_paths=[Path("/data/Music"), Path("/data/MusicOther")], 
-        dst_root_path=Path("/home/brett/Git/bretttolbert/moongas/moongas-library"), 
-        include_filenames=["cover.jpg"], 
+        src_paths=[Path("/data/Music"), Path("/data/MusicOther")],
+        dst_root_path=Path("/home/brett/Git/bretttolbert/moongas/moongas-library"),
+        include_filenames=["cover.jpg"],
         exclude_keywords=[],
         dry_run=False,
         ignore_existing=True,
-        dir_copy_mode=DirCopyMode.PreserveStructure)
-
+        dir_copy_mode=DirCopyMode.PreserveStructure,
+    )
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Copy media library files maintaining structure or target criteria."
     )
-    
+
     parser.add_argument(
-        "-s", "--src-paths",
+        "-s",
+        "--src-paths",
         type=Path,
         nargs="+",
         default=[Path("/data/Music"), Path("/data/MusicOther")],
-        help="One or more source directory paths."
+        help="One or more source directory paths.",
     )
     parser.add_argument(
-        "-d", "--dst-path",
-        type=Path,
-        required=True,
-        help="Destination directory path."
+        "-d", "--dst-path", type=Path, required=True, help="Destination directory path."
     )
     parser.add_argument(
-        "-i", "--include-filenames",
+        "-i",
+        "--include-filenames",
         nargs="+",
         default=["cover.jpg"],
-        help="Filename patterns to include (e.g., cover.jpg artist.yaml)."
+        help="Filename patterns to include (e.g., cover.jpg artist.yml).",
     )
     parser.add_argument(
-        "-e", "--exclude-keywords",
+        "-e",
+        "--exclude-keywords",
         nargs="*",
         default=[],
-        help="Keywords to exclude from file paths."
+        help="Keywords to exclude from file paths.",
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Perform a trial run without making actual file changes."
+        help="Perform a trial run without making actual file changes.",
     )
     parser.add_argument(
         "--overwrite-existing",
         dest="ignore_existing",
         action="store_false",
         default=True,
-        help="Overwrite existing destination files (default: skip existing)."
+        help="Overwrite existing destination files (default: skip existing).",
     )
     parser.add_argument(
         "--dir-copy-mode",
         type=lambda mode: DirCopyMode[mode],
         choices=list(DirCopyMode),
         default=DirCopyMode.PreserveStructure,
-        help="Directory structure copy mode."
+        help="Directory structure copy mode.",
     )
-    
+
     return parser.parse_args()
 
 
@@ -235,7 +237,7 @@ def main():
         exclude_keywords=args.exclude_keywords,
         dry_run=args.dry_run,
         ignore_existing=args.ignore_existing,
-        dir_copy_mode=args.dir_copy_mode
+        dir_copy_mode=args.dir_copy_mode,
     )
 
 

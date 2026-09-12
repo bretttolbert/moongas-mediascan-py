@@ -9,7 +9,7 @@ from .artistdata import ArtistData, ArtistDataOldFmt
 class ArtistDataFile(YAMLWizard, key_transform=LetterCase.CAMEL):
     """
     ArtistDataFile dataclass
-    Data model for a single artist_data.yaml YAML file
+    Data model for a single artist.yml YAML file
 
     """
 
@@ -20,7 +20,7 @@ class ArtistDataFile(YAMLWizard, key_transform=LetterCase.CAMEL):
 class ArtistDataFileOldFmt(YAMLWizard, key_transform=LetterCase.CAMEL):
     """
     ArtistDataFile dataclass
-    Data model for a single artist_data.yaml YAML file
+    Data model for a single artist.yml YAML file
 
     """
 

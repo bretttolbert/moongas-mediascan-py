@@ -1,5 +1,5 @@
 """
-Batch modify artist.yaml files to make changes to the yaml format
+Batch modify artist.yml files to make changes to the yaml format
 """
 
 from pathlib import Path
@@ -8,10 +8,10 @@ from mediascan.artistdatafile_loader import load_artistdatafile_yaml
 from mediascan.mediafiles_loader import load_files_yaml
 
 """
-Converts artist.yaml files from one format to another
+Converts artist.yml files from one format to another
 (used to make changes to the format)
 
-artist.yaml file example:
+artist.yml file example:
 
 
 Old format:
@@ -52,7 +52,7 @@ def excluded(path: Path):
 
 
 def main():
-    files_yaml_path = "../../out/files.yaml"
+    files_yaml_path = "../../out/files.yml"
     files = load_files_yaml(files_yaml_path)
     artist_paths: dict[str, Path] = {}
     for file in files.files:
@@ -66,9 +66,9 @@ def main():
         if excluded(artist_path):
             continue
 
-        artist_yaml_path = Path(artist_path).joinpath("artist.yaml")
+        artist_yaml_path = Path(artist_path).joinpath("artist.yml")
         if not artist_yaml_path.exists():
-            print(f"{artist_path} missing artist.yaml")
+            print(f"{artist_path} missing artist.yml")
             artists_missing.append(artist)
         else:
             # convert yaml (if applicable)
@@ -108,7 +108,10 @@ def main():
                     reformat_applicable = True
                     adf.artist_data.region_code = "GB-LND"
 
-                if adf.artist_data.country_code == "GB" and adf.artist_data.city == "Londres":
+                if (
+                    adf.artist_data.country_code == "GB"
+                    and adf.artist_data.city == "Londres"
+                ):
                     reformat_applicable = True
                     adf.artist_data.city = "London"
                     adf.artist_data.region_code = "GB-LND"
@@ -181,13 +184,15 @@ def main():
                 exceptions.append((artist_yaml_path, ex))
     exist_count = len(artist_paths) - len(artists_missing)
 
-    print(f"Found artist.yaml for {exist_count} out of {len(artist_paths)} artist folders")
+    print(
+        f"Found artist.yml for {exist_count} out of {len(artist_paths)} artist folders"
+    )
     print(f"Missing count: {len(artists_missing)}")
-    # print("Writing artists missing artist.yaml list to artists_missing.txt")
+    # print("Writing artists missing artist.yml list to artists_missing.txt")
     # with open("artists_missing.txt", "w") as f:
     #    for artist in sorted(artists_missing):
     #        f.write(artist + os.linesep)
-    print(f"Total artist.yaml files updated: {len(artists_updated)}")
+    print(f"Total artist.yml files updated: {len(artists_updated)}")
     print("Exceptions:")
     for artist_yaml_path, ex in exceptions:
         print(artist_yaml_path, ex)

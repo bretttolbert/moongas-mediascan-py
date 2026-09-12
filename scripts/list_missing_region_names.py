@@ -3,9 +3,10 @@ from typing import Set
 
 from mediascan.artists_loader import load_artists_yaml
 
-
-regions_code_name_map_json_path = "../../../mediaserver/app/static/json_data/region_code_name_map.json"
-artists_yaml_path = "../../out/artists.yaml"
+regions_code_name_map_json_path = (
+    "../../../mediaserver/app/static/json_data/region_code_name_map.json"
+)
+artists_yaml_path = "../../out/artists.yml"
 artists = load_artists_yaml(artists_yaml_path)
 
 with open(regions_code_name_map_json_path) as f:

@@ -8,13 +8,12 @@ import pandas as pd
 from mediascan.artistdata import ArtistData
 from mediascan.artistdatafile import ArtistDataFile
 
-
 """
-Generates artist.yaml files from artist data CSV files
+Generates artist.yml files from artist data CSV files
 (CSV output by Google Gemini, in chunks of 25-150 artists, which 
 is manageable given that I only have approx. 2500 artists total)
 
-artist.yaml file example:
+artist.yml file example:
 
 artistData:
   artistNames:
@@ -94,7 +93,9 @@ def escape_artist_name(name: str) -> str:
 
 def find_artist_from_dir_name(dir_name: str, artist_names: list[str]) -> str:
     for a in artist_names:
-        if dir_name.lower().replace("the ", "") == escape_artist_name(a).lower().replace("the ", ""):
+        if dir_name.lower().replace("the ", "") == escape_artist_name(
+            a
+        ).lower().replace("the ", ""):
             return a
     return ""
 
@@ -117,10 +118,13 @@ def read_csv_file(csv_filepath: Path):
         artists_data[artist] = artist_data
 
     # test artist yaml file generation here
-    # write_yaml_file("artist.yaml", {"artist_data": artists_data["Parcels"]})
+    # write_yaml_file("artist.yml", {"artist_data": artists_data["Parcels"]})
     # return
 
-    SOURCE_PATHS = ["/home/brett/Downloads/data/Music", "/home/brett/Downloads/data/MusicOther"]
+    SOURCE_PATHS = [
+        "/home/brett/Downloads/data/Music",
+        "/home/brett/Downloads/data/MusicOther",
+    ]
     overwrite_existing_artist_yaml = False
     file_write_count = 0
     file_overwrite_count = 0
@@ -135,13 +139,16 @@ def read_csv_file(csv_filepath: Path):
                 # 2 = album [year] dir
                 if current_depth - base_depth == 1:
                     d_abs_path = Path(source_path).joinpath(d_name)
-                    artist_yaml_dst_path = Path(d_abs_path).joinpath("artist.yaml")
+                    artist_yaml_dst_path = Path(d_abs_path).joinpath("artist.yml")
                     artist_names = list(artists_data.keys())
                     found_artist_name = find_artist_from_dir_name(d_name, artist_names)
                     if found_artist_name != "":
                         artists_found.append(found_artist_name)
                         artist_data = artists_data[found_artist_name]
-                        if overwrite_existing_artist_yaml or not artist_yaml_dst_path.exists():
+                        if (
+                            overwrite_existing_artist_yaml
+                            or not artist_yaml_dst_path.exists()
+                        ):
                             file_write_count += 1
                             if artist_yaml_dst_path.exists():
                                 file_overwrite_count += 1
